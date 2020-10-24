@@ -1,0 +1,113 @@
+---
+title: "IDA Hw1"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+# Question 3 part 1
+```{r setup1, include=TRUE}
+knitr::opts_chunk$set(message = TRUE)
+# Question 3 part a and b
+z1 = data.frame(rnorm(500,0,1), stringsAsFactors=FALSE) # generated three list of data that are normally distributed
+z2 = data.frame(rnorm(500,0,1), stringsAsFactors=FALSE)
+z3 = data.frame(rnorm(500,0,1), stringsAsFactors=FALSE)
+Y1 = data.frame(z1+1, stringsAsFactors = FALSE)
+Y2 = data.frame(5+2*z1+z2)
+Y2[2*(z1-1)+z3<0] = NA
+Y3 = data.frame(5+2*z1+z2) #Y3 is fully observed data of Y2 after imposing missingness
+data = data.frame(Y1,Y2)
+colnames(data) = c("Y1", "Y2")
+data
+require(VIM)
+marginplot(data[c(1,2)]) # plot of the marginal distribution of Y2 with missing values
+
+data1 = data.frame(Y1,Y3)
+colnames(data1) = c("Y1", "Y3")
+data1
+marginplot(data1[c(1,2)]) # plot of the marginal distribution of Y2 after imposing missingness
+
+```
+
+# Question 3 part 2
+```{r setup2, include=TRUE}
+set.seed(124)
+fit1 = lm(data$Y2 ~ data$Y1, data = data)
+stochastic_1 = predict(fit1, newdata = data) + rnorm(nrow(data), 0, sigma(fit1))
+data2 = data.frame(Y1,stochastic_1)
+colnames(data2) = c("Y1", "Y2")
+data2
+marginplot(data2[c(1,2)])
+```
+
+#Question 3 part 3
+```{r}
+y1 = data.frame(z1+1, stringsAsFactors = FALSE)
+y2 = data.frame(5+2*z1+z2)
+y2[2*(5+2*z1+z2-1)+z3<0] = NA
+y3 = data.frame(5+2*z1+z2) 
+data3 = data.frame(y1,y2)
+colnames(data3) = c("Y1", "Y2")
+data3
+
+marginplot(data3[c(1,2)]) 
+
+data4 = data.frame(Y1,Y3)
+colnames(data4) = c("Y1", "Y3")
+data4
+marginplot(data4[c(1,2)]) 
+
+```
+# Question 3 Part 4
+```{r1}
+set.seed(124)
+fit2 = lm(data3$Y2 ~ data3$Y1, data = data3)
+stochastic_2 = predict(fit2, newdata = data3) + rnorm(nrow(data3), 0, sigma(fit2))
+data5 = data.frame(y1,stochastic_2)
+colnames(data5) = c("Y1", "Y2")
+data5
+marginplot(data5[c(1,2)])
+```
+
+
+
+#Question 4 Part 1
+```{r cars}
+patients <- get(load('databp.Rdata'))
+patients
+mean(patients$recovtime,na.rm=TRUE)
+cor(patients$recovtime,patients$logdose, use = "complete.obs")
+cor(patients$recovtime,patients$bloodp, use = "complete.obs")
+
+```
+# Question 4 part 2
+```{r2}
+recov_mis = ifelse(is.na(patients$recovtime), mean(patients$recovtime,na.rm=TRUE), patients$recovtime)
+mean(recov_mis)
+cor(recov_mis,patients$logdose,use = "complete")
+cor(recov_mis,patients$bloodp,use = "complete")
+```
+
+# Question 4 part 3
+```{r pressure, echo=FALSE}
+fit = lm(patients$recovtime ~ patients$logdose + patients$bloodp, data = patients)
+summary(fit)
+linear = predict(fit, newdata = patients)
+mean(linear)
+cor(linear,patients$logdose,use = "complete")
+cor(linear,patients$bloodp,use = "complete")
+```
+# Question 4 part 4
+```{r3}
+set.seed(124)
+stochastic = predict(fit, newdata = patients) + rnorm(nrow(patients), 0, sigma(fit))
+mean(stochastic)
+cor(stochastic,patients$logdose,use = "complete")
+cor(stochastic,patients$bloodp,use = "complete")
+
+```
+# Question 5 part 5
+```{r4}
+
+```
+
