@@ -106,6 +106,7 @@ cor(stochastic,patients$bloodp,use = "complete")
 # I wasn't quite sure what the question means. Based on my understanding, the mean matching method is to replace the missing values by donors with their observed values being closest to the simulated value of each missing row. 
 
 available = data.frame(patients$recovtime, stringsAsFactors = FALSE)
+library(ggplot2)
 aa = remove_missing(available, na.rm = TRUE) # First I removed missing values from the recover time column
 aa
 which(is.na(available)) # Then I located the index of each missing value's location.
