@@ -1,0 +1,130 @@
+---
+title: "IDA Hw1"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+```{r}
+z1 = data.frame(rnorm(500,0,1), stringsAsFactors=FALSE) # generated three list of data that are normally distributed
+z2 = data.frame(rnorm(500,0,1), stringsAsFactors=FALSE)
+z3 = data.frame(rnorm(500,0,1), stringsAsFactors=FALSE)
+Y1 = data.frame(z1+1, stringsAsFactors = FALSE)
+Y2 = data.frame(5+2*z1+z2)
+Y2[2*(z1-1)+z3<0] = NA
+Y3 = data.frame(5+2*z1+z2) #Y3 is fully observed data of Y2 after imposing missingness
+data = data.frame(Y1,Y2)
+colnames(data) = c("Y1", "Y2")
+data
+require(VIM)
+marginplot(data[c(1,2)]) # plot of the marginal distribution of Y2 with missing values
+data1 = data.frame(Y1,Y3)
+colnames(data1) = c("Y1", "Y3")
+data1
+marginplot(data1[c(1,2)]) # plot of the marginal distribution of Y2 after imposing missingness
+```
+
+
+# Question 3 part 2
+```{r setup2, include=TRUE}
+set.seed(124)
+fit1 = lm(data$Y2 ~ data$Y1, data = data)
+stochastic_1 = predict(fit1, newdata = data) + rnorm(nrow(data), 0, sigma(fit1))
+data2 = data.frame(Y1,stochastic_1)
+colnames(data2) = c("Y1", "Y2")
+data2
+marginplot(data2[c(1,2)])
+```
+
+#Question 3 part 3
+```{r}
+y1 = data.frame(z1+1, stringsAsFactors = FALSE)
+y2 = data.frame(5+2*z1+z2)
+y2[2*(5+2*z1+z2-1)+z3<0] = NA
+y3 = data.frame(5+2*z1+z2) 
+data3 = data.frame(y1,y2)
+colnames(data3) = c("Y1", "Y2")
+data3
+
+marginplot(data3[c(1,2)]) 
+
+data4 = data.frame(Y1,Y3)
+colnames(data4) = c("Y1", "Y3")
+data4
+marginplot(data4[c(1,2)]) 
+
+```
+# Question 3 Part 4
+```{r}
+set.seed(124)
+fit2 = lm(data3$Y2 ~ data3$Y1, data = data3)
+stochastic_2 = predict(fit2, newdata = data3) + rnorm(nrow(data3), 0, sigma(fit2))
+data5 = data.frame(y1,stochastic_2)
+colnames(data5) = c("Y1", "Y2")
+data5
+marginplot(data5[c(1,2)])
+```
+
+
+#Question 4 Part 1
+```{r cars}
+patients = get(load('databp.Rdata'))
+patients
+mean(patients$recovtime,na.rm=TRUE)
+cor(patients$recovtime,patients$logdose, use = "complete.obs")
+cor(patients$recovtime,patients$bloodp, use = "complete.obs")
+
+```
+# Question 4 part 2
+```{r}
+recov_mis = ifelse(is.na(patients$recovtime), mean(patients$recovtime,na.rm=TRUE), patients$recovtime)
+mean(recov_mis)
+cor(recov_mis,patients$logdose,use = "complete")
+cor(recov_mis,patients$bloodp,use = "complete")
+```
+
+# Question 4 part 3
+```{r pressure, echo=FALSE}
+fit = lm(patients$recovtime ~ patients$logdose + patients$bloodp, data = patients)
+summary(fit)
+linear = predict(fit, newdata = patients)
+mean(linear)
+cor(linear,patients$logdose,use = "complete")
+cor(linear,patients$bloodp,use = "complete")
+```
+# Question 4 part 4
+```{r}
+set.seed(124)
+stochastic = predict(fit, newdata = patients) + rnorm(nrow(patients), 0, sigma(fit))
+mean(stochastic)
+cor(stochastic,patients$logdose,use = "complete")
+cor(stochastic,patients$bloodp,use = "complete")
+
+```
+# Question 5 part 5
+```{r}
+# I wasn't quite sure what the question means. Based on my understanding, the mean matching method is to replace the missing values by donors with their observed values being closest to the simulated value of each missing row. 
+
+available = data.frame(patients$recovtime, stringsAsFactors = FALSE)
+aa = remove_missing(available, na.rm = TRUE) # First I removed missing values from the recover time column
+aa
+which(is.na(available)) # Then I located the index of each missing value's location.
+
+# I looked up the values from the observed data and find the closest one to each of the simulated data from regression imputation method.
+donor_1 = aa[which.min(abs(c(aa[1:22]) - linear[4]))] 
+donor_2 = aa[which.min(abs(c(aa[1:22]) - linear[10]))]
+donor_3 = aa[which.min(abs(c(aa[1:22]) - linear[22]))]
+# Next I stored the three donor values and the observed data in one vector and resorted them to the correct order.
+mean_match = c(donor_1,donor_2,donor_3,aa)
+aa2 = append(aa, 4, values=donor_1)
+aa3 = append(aa2, 9, values=donor_2)
+aa4 = append(aa3, 21, values=donor_3)
+aa4
+mean(aa4)
+cor(aa4,patients$logdose,use = "complete")
+cor(aa4,patients$bloodp,use = "complete")
+
+```
+# Question 5 part 6
+
+One of the aspects that predicted mean matching is better than stochastic regression imputation is that it generates more accurate mean. One  of the potential problem for this method is it can be extremely inaccurate when there are too many missing values. If there are more missing values that observed, the value of donors may be significantly different than the predicted value from regression imputation.
